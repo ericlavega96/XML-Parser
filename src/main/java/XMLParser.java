@@ -30,7 +30,9 @@ public class XMLParser {
             e.printStackTrace();
         }*/
         File fXmlFile = new File("prueba.xml");
+        File dtdFile = new File("prueba.dtd");
 
+        /*
         System.out.println("COMPLETE TAGS: " + getAllTags(fXmlFile));
         System.out.println("TAGS: " + getTags(fXmlFile));
         for (String tag: getAllTags(fXmlFile)){
@@ -38,8 +40,11 @@ public class XMLParser {
             System.out.println("TAG: " + tag + " : TRASH: " +   getTrash(tag));
             System.out.println("DELETE ATT AND TAGS" +   deleteAttributesAndTrashFromTag(tag));
         }
-
-        validateXML(fXmlFile);
+*/
+        //validateXML(fXmlFile);
+        System.out.println(getDTDTags(dtdFile));
+        System.out.println(getElementTags(dtdFile));
+        System.out.println(getChildsFromTag("<!ATTLIST TVSCHEDULE NAME CDATA #REQUIRED>"));
     }
 
     /*public static void validateXML(File f) {
@@ -244,10 +249,6 @@ public class XMLParser {
         while(m.find()){
             auxtag = auxtag.replaceAll(m.group(1).replace("/",""),"");
         }
-        /*while(m.find()){
-            auxtag = auxtag.replaceAll(m.group(1),"");
-            System.out.println("A reemplazar:"+ m.group(1));
-        }*/
         return auxtag.replaceAll("\\s","");
     }
     public static List<String> getTrash(String tag){
@@ -318,4 +319,43 @@ public class XMLParser {
         }
         return valido;
     }
+    public static List<String> getDTDTags(File f){
+        List<String> tags = new LinkedList<>();
+        String xml = normalizarXML(f);
+        Matcher m = Pattern.compile("<!([^>\\[]+)>").matcher(xml);
+        while(m.find()){
+            tags.add(m.group());
+        }
+        return tags;
+    }
+
+    public static List<String> getElementTags(File f){
+        List<String> elementTags = new LinkedList<>();
+        for (String dtdTag: getDTDTags(f)) {
+            if (dtdTag.contains("<!ELEMENT")) {
+                elementTags.add(dtdTag);
+            }
+        }
+        return elementTags;
+    }
+
+    public static String getDTDTagName(String tag){
+        Matcher m = Pattern.compile("<![\\S+?]+[\\s]+([\\S+?]+)[\\s]+[^>]+>").matcher(tag);
+        String dtdTagName = null;
+        if(m.find()){
+            dtdTagName = m.group(1);
+        }
+        return dtdTagName;
+    }
+
+    public static List<String> getChildsFromTag(String tag){
+        List<String> childs = new LinkedList<>();
+            Matcher m = Pattern.compile("<![\\S+?]+[\\s]+([\\S+?]+)[\\s]+[\\(]?([^>]+)[?<!\\)]?>").matcher(tag);
+        //Opcion 2 [\(]*[A-ZAa-z\(\|\+\?\*]+
+        while(m.find()){
+            childs.add(m.group(2));
+        }
+        return childs;
+    }
+
 }
