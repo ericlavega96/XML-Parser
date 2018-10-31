@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<note>
+    <receta>
+        <to >Tove</to>
+        <heading>Reminder</heading>
+        <heading id="hola">Hola</heading>
+        <heading id="hey">Hey</heading>
+        <body>Don't forget me this weekend!</body>
+        <headin/>
+        <hola/>
+    </receta>
+</note>
