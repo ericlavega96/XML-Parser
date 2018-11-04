@@ -32,19 +32,20 @@ public class XMLParser {
         File fXmlFile = new File("prueba.xml");
         File dtdFile = new File("prueba.dtd");
 
-        /*
+
         System.out.println("COMPLETE TAGS: " + getAllTags(fXmlFile));
         System.out.println("TAGS: " + getTags(fXmlFile));
         for (String tag: getAllTags(fXmlFile)){
             System.out.println("TAG: " + tag + " : ATT: " +   getAttributes(tag));
             System.out.println("TAG: " + tag + " : TRASH: " +   getTrash(tag));
             System.out.println("DELETE ATT AND TAGS" +   deleteAttributesAndTrashFromTag(tag));
+            System.out.println("TAGS WITHOUT SINGLE TAGS" + getTagsWithoutSingleTags(fXmlFile));
         }
-*/
-        //validateXML(fXmlFile);
+
+        validateXML(fXmlFile);
         System.out.println(getDTDTags(dtdFile));
         System.out.println(getElementTags(dtdFile));
-        System.out.println(getChildsFromTag("<!ATTLIST TVSCHEDULE NAME CDATA #REQUIRED>"));
+        System.out.println(getChildsFromTag("<!ELEMENT DAY (DATE,(HOLIDAY|PROGRAMSLOT+)+)>"));
     }
 
     /*public static void validateXML(File f) {
@@ -65,7 +66,7 @@ public class XMLParser {
         }
     }
     */
-   /* public static Stack<String> validateXMLStack(File f){
+   public static Stack<String> validateXMLStack(File f){
         Stack<String> stack = new Stack();
         for (String tag: getTags(f)){
             if(tag.charAt(1) != '/'){
@@ -89,12 +90,13 @@ public class XMLParser {
             }
         }
         return stack;
-    }*/
+    }
 
    public static Stack<String> validateXML(File f){
        Stack<String> stack = new Stack();
        if(validateTags(getAllTags(f)) && validateTrash(f) && validateDuplicateAttributes(f)){
            for (String tag: getTagsWithoutSingleTags(f)){
+               System.out.println(tag);
                if(tag.charAt(1) != '/'){
                    stack.push(tag);
                }else{
@@ -143,11 +145,16 @@ public class XMLParser {
         List<String> tags = new LinkedList<>();
         String xml = normalizarXML(f);
         Matcher m = Pattern.compile("(<[^?](\\S+?)(.*?)[/]?>)").matcher(xml);
+        String linea = null;
+        String sinTrashAndAtt = null;
         while(m.find()){
             if(getAttributes(m.group()).isEmpty()){
-                tags.add(deleteAttributesAndTrashFromTag(m.group()));
+                tags.add(deleteTrash(m.group()));
             }else{
+                linea = m.group();
                 tags.add(deleteAttributesAndTrashFromTag(m.group()));
+                sinTrashAndAtt = deleteAttributesAndTrashFromTag(m.group());
+
             }
         }
         return tags;
@@ -280,7 +287,7 @@ public class XMLParser {
     }
 
     public static String deleteAttributesAndTrashFromTag(String tag){
-        return deleteAttributes(deleteTrash(tag));
+        return deleteTrash(deleteAttributes(tag));
     }
     public static boolean validateTrash(File f){
         boolean valido = true;
@@ -350,10 +357,16 @@ public class XMLParser {
 
     public static List<String> getChildsFromTag(String tag){
         List<String> childs = new LinkedList<>();
-            Matcher m = Pattern.compile("<![\\S+?]+[\\s]+([\\S+?]+)[\\s]+[\\(]?([^>]+)[?<!\\)]?>").matcher(tag);
+        Matcher m = Pattern.compile("<![\\S+?]+[\\s]+([\\S+?]+)[\\s]+[\\(]?([^>]+)>").matcher(tag);
         //Opcion 2 [\(]*[A-ZAa-z\(\|\+\?\*]+
         while(m.find()){
-            childs.add(m.group(2));
+            if(m.group(2).contains(" ")){
+                for (String att: m.group(2).split(" ")){
+                    childs.add(att);
+                }
+            }else{
+                childs.add(m.group(2));
+            }
         }
         return childs;
     }
